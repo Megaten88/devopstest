@@ -1,0 +1,4 @@
+- hosts: vms
+  gather_facts: true
+  tasks:
+    - include_tasks: ./installdocker.yml
