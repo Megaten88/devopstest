@@ -1,3 +1,19 @@
+- name: Install wget
+  yum:
+    name: wget
+    state: present
+
+# - name: Add VB repo
+#   shell: |
+#     cd /etc/yum.repos.d
+#     wget http://download.virtualbox.org/virtualbox/rpm/rhel/virtualbox.repo
+
+- name: Install 
+  yum:
+    name: dkms
+    enablerepo: epel
+    state: present
+
 - name: Yum installation
   yum:
     name: "{{item}}"
@@ -11,13 +27,7 @@
     - git
     - java-1.8.0-openjdk
     - maven
-
-- name: del repository
-  yum_repository:
-      name: docker-ce
-      description: Docker
-      baseurl: https://download.docker.com/linux/centos/docker-ce.repo
-      state: absent
+    - "@Development tools"
 
 - name: Add repository
   command:  yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
@@ -31,14 +41,27 @@
 
 - name: Pip-docker dependencies
   pip: 
-    name: docker-compose
+    name: "{{item}}"
     state: present
+  with_items:
+    - docker-compose
+    - docker-py
+
+- name: Check existance of docker-machine
+  stat: path=/tmp/docker-machine
+  ignore_errors: True
+  register: assert
 
 - name: Install docker-machine
   shell: "{{item}}"
   with_items:
     - curl -L https://github.com/docker/machine/releases/download/v0.13.0/docker-machine-`uname -s`-`uname -m` >/tmp/docker-machine
     - chmod +x /tmp/docker-machine
+  when: assert.stat.exists != True 
 
 - name: Move 
   command: cp /tmp/docker-machine /usr/local/bin/docker-machine
+  when: assert.stat.exists != True 
+
+- name: Start Docker
+  shell: systemctl start docker

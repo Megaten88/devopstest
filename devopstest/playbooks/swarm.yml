@@ -1,1 +1,31 @@
-- name: Setup Swarm Clusters
+- name: Setup Machines
+  shell: |
+    export DOTOKEN=0cd4e8b37c532a6b6ffafd84a6370860eb11e3b41436926dc8a6dd6445164eef
+    source ~/.bashrc
+    docker-machine create --driver digitalocean --digitalocean-image centos-7-x64 --digitalocean-access-token $DOTOKEN vmanager
+    docker-machine create --driver digitalocean --digitalocean-image centos-7-x64 --digitalocean-access-token $DOTOKEN vworke
+
+
+- name: Register vmanager ip
+  command: docker-machine ip vmanager
+
+- name: Setup manager
+  shell: |
+    docker-machine ssh vmanager
+    eval "$(docker-machine env vmanager)"
+    docker swarm init --advertise-addr $(docker-machine ip vmanager) --listen-addr 0.0.0.0:2377
+    exit
+
+- name: Register worker token
+  shell: |
+    docker-machine ssh vmanager
+    eval "$(docker-machine env vmanager)"
+    docker swarm join-token -q worker
+  register: worker_token
+
+- name: Swarm join worker
+  shell: |
+    docker-machine ssh vworker
+    eval "$(docker-machine env vworker)"
+    docker swarm join --token {{worker_token.stdout}} $(docker-machine ip vmanager):2377 
+

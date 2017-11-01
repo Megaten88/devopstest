@@ -1,4 +1,6 @@
 - hosts: vms
-  gather_facts: true
+  gather_facts: false
   tasks:
-    - include_tasks: ./installdocker.yml
+    # - include_tasks: ./installdocker.yml
+    # - include_tasks: ./swarm.yml
+     - include_tasks: mysql.yml

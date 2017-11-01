@@ -1,0 +1,5 @@
+- name: Create MySQL container with env
+  shell: |
+    docker-machine ssh vmanager
+    eval "$(docker-machine env vmanager)"
+    docker service create --mount src=mariadb,dst=/var/lib/mysql --replicas 2 --name mysql mysql --env-add MYSQL_ROOT_PASSWORD=mayra
